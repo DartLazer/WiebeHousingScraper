@@ -41,8 +41,11 @@ def fetch_latest_apartment(url: str, html_tag: str, html_class: str) -> str:
 def fetch_latest_apartment_with_selenium(url: str, html_tag: str, html_class: str):
     options = Options()
     options.add_argument('--headless')
+    #options.add_argument(
+    #    "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
+    # Linux User agent
     options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
+        "user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
 
     driver = webdriver.Chrome(options=options)
     try:
