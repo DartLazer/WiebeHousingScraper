@@ -118,4 +118,5 @@ if __name__ == "__main__":
             main()
         except Exception as e:
             print(f'An error has occured {e}')
+        print(f'Script finished sleeping for {sleep_interval_timer}')
         sleep(sleep_interval_timer)
