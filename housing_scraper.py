@@ -1,6 +1,6 @@
 import configparser
 import os
-from time import sleep
+from time import sleep, time
 
 import requests
 from bs4 import BeautifulSoup
@@ -119,7 +119,7 @@ def fetch_website_using_selenium(url: str) -> BeautifulSoup | None:
     try:
         driver.get(url)
         # Explicitly wait for the element to become present on the page
-        WebDriverWait(driver, 10).until(
+        WebDriverWait(driver, 20).until(
             ec.presence_of_all_elements_located
         )
 
@@ -169,9 +169,13 @@ def main():
 
 if __name__ == "__main__":
     while True:
+        start_time = time()
         try:
             main()
         except Exception as e:
             print(f'An error has occurred {e}')
-        print(f'Script finished sleeping for {sleep_interval_timer}')
-        sleep(sleep_interval_timer)
+        end_time = time()
+        elapsed_time = end_time - start_time
+        sleep_time = max(sleep_interval_timer - elapsed_time, 0)  # Ensuring the sleep time is never negative
+        print(f'Script finished, sleeping for {sleep_time} seconds')
+        sleep(sleep_time)
