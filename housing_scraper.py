@@ -155,7 +155,7 @@ def main():
         if latest_tag is None:
             message = f"ERROR!!! Unable to find tag {html_tag} and class {html_class} on website: {site}"
             print(message)
-            notify_telegram(message)
+            # notify_telegram(message)
             continue
 
         previous_stored_tag = read_stored_tag(filename)
