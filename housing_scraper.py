@@ -6,6 +6,8 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 sleep_interval_timer = 900 # sleep interval timer in seconds
 
@@ -45,17 +47,18 @@ def fetch_latest_apartment_with_selenium(url: str, html_tag: str, html_class: st
     driver = webdriver.Chrome(options=options)
     try:
         driver.get(url)
-        driver.implicitly_wait(5)
+        # Explicitly wait for the element to become present on the page
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located
+        )
 
         # Get the page source and parse it with BeautifulSoup
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
         # Find the tag using the given HTML tag and class
         tag = soup.find(html_tag, class_=html_class)
-
         # Don't forget to close the WebDriver
         driver.quit()
-        print(tag.text.strip())
 
         # Return the desired value (modify as needed)
         return tag.text.strip() if tag else None
