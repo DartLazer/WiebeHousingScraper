@@ -16,38 +16,64 @@ config = configparser.ConfigParser(interpolation=None)
 config.read('config.cfg')
 
 
-def read_stored_tag(filename: str) -> str | None:
+def ensure_temp_folder_exists():
     """
-    Reads a stored tag value from a predefined local text file. This so states are preserved in between sessions
+    Ensures that the 'temp_files' folder exists, and if not, creates it.
+    """
+    folder_path = 'temp_files'
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+
+def remove_duplicates(lst: list) -> list:
+    """
+    Removes duplicates from a list while preserving the order of the elements.
+    :param lst: Input list
+    :return: List with duplicates removed
+    """
+    seen = set()
+    result = []
+    for item in lst:
+        if item not in seen:
+            result.append(item)
+            seen.add(item)
+    return result
+
+
+def read_stored_tags(filename: str) -> list:
+    """
+    Reads a file containing found tags and returns them as a list
     :param filename: filename/filepath of the file.
     :return: contents of the file as string
     """
+    filename = os.path.join('temp_files', filename)
     if os.path.exists(filename):
         with open(filename, 'r') as file:
-            return file.read().strip()
-    return None
+            return [line.strip() for line in file.readlines()]
+    return []
 
 
-def write_stored_tag(filename: str, tag: str) -> None:
+def write_stored_tags(filename: str, tags: list) -> None:
     """
-    Writes a new tag value from a website to a local text file.
-    :param filename: new filename/filepath
-    :param tag: Contents of the tag
-    :return: None
-    """
+        Writes a new tag value from a website to a local text file.
+        :param filename: new filename/filepath
+        :param tags: A list containing tags
+        :return: None
+        """
+    filename = os.path.join('temp_files', filename)
     with open(filename, 'w') as file:
-        file.write(tag)
+        file.write('\n'.join(tags))
 
 
-def handle_new_tag_found(url: str, latest_tag: str) -> None:
+def handle_new_tag_found(url: str, amount_of_new_tags_found: int) -> None:
     """
     Actions to perform when a new tag is found.
     :param url: URL at which the new tag is found
-    :param latest_tag: Conents of the new tag
+    :param amount_of_new_tags_found:Amount of new tags found
     :return:
     """
-    print('New apartment!')
-    message = f"New apartment found on {url}: {latest_tag}"
+    message = f"{amount_of_new_tags_found} new apartment(s) found on {url}"
+    print(message)
     telegram_status = notify_telegram(message)
     if not telegram_status:
         print('Error sending telegram message')
@@ -55,7 +81,7 @@ def handle_new_tag_found(url: str, latest_tag: str) -> None:
 
 def notify_telegram(message: str) -> bool:
     """
-    Send a notification to the user via Telegram with a predfined message
+    Send a notification to the user via Telegram with a predefined message
     :param message: String containing the message
     :return: If a 200 code was received from telegram
     """
@@ -70,7 +96,7 @@ def notify_telegram(message: str) -> bool:
 
 def find_newest_tag_in_page(soup_page: BeautifulSoup, target_html_tag: str, target_html_class: str):
     """
-    Scans a beautiful soup object for a taget html tag and target html class
+    Scans a beautiful soup object for a target html tag and target html class
     :param soup_page: The page that was just visited and converted to a bs4 object
     :param target_html_tag: html tag to look for
     :param target_html_class: html class to look for
@@ -80,6 +106,20 @@ def find_newest_tag_in_page(soup_page: BeautifulSoup, target_html_tag: str, targ
 
     # Return the desired value (modify as needed)
     return tag.text.strip() if tag else None
+
+
+def find_all_tags_in_page(soup_page: BeautifulSoup, target_html_tag: str, target_html_class: str) -> list:
+    """
+    Scans a beautiful soup object for a target html tag and target html class
+    :param soup_page: The page that was just visited and converted to a bs4 object
+    :param target_html_tag: html tag to look for
+    :param target_html_class: html class to look for
+    :return: A list of stripped strings of the found html tags, or else an empty list
+    """
+    tags = soup_page.find_all(target_html_tag, class_=target_html_class)
+
+    # Return the desired values (modify as needed)
+    return [tag.text.strip() for tag in tags if tag]
 
 
 def fetch_website(url: str) -> BeautifulSoup | None:
@@ -97,8 +137,8 @@ def fetch_website(url: str) -> BeautifulSoup | None:
         response.raise_for_status()  # Raise an exception if the HTTP status code is 4xx or 5xx
         soup = BeautifulSoup(response.text, 'html.parser')
         return soup
-    except requests.RequestException as e:
-        print(f"An error occurred while fetching the URL {url}: {e}")
+    except requests.RequestException as error_message:
+        print(f"An error occurred while fetching the URL {url}: {error_message}")
         return None
 
 
@@ -136,35 +176,38 @@ def fetch_website_using_selenium(url: str) -> BeautifulSoup | None:
 
 
 def main():
+    ensure_temp_folder_exists()
     print('Checking all websites for new entries...')
+    total_new_apartments = 0  # Keep track of the total number of new apartments
+
     # Loop through config file site sections
     for site in config.sections():
-        url = config[site]['url']
-        html_tag = config[site]['html_tag']
-        html_class = config[site]['html_class']
-        filename = config[site]['filename']
-        use_selenium = config[site].get('use_selenium', 'no').lower() == 'yes'
+        section = config[site]
+        url = section.get('url')
+        html_tag = section.get('html_tag')
+        html_class = section.get('html_class')
+        filename = section.get('filename')
+        use_selenium = section.get('use_selenium', 'no').lower() == 'yes'
 
         if use_selenium:
             soup_page = fetch_website_using_selenium(url)
         else:
             soup_page = fetch_website(url)
 
-        latest_tag = find_newest_tag_in_page(soup_page, html_tag, html_class)
+        found_tags = find_all_tags_in_page(soup_page, html_tag, html_class)
+        previous_stored_tags = read_stored_tags(filename)
 
-        if latest_tag is None:
-            message = f"ERROR!!! Unable to find tag {html_tag} and class {html_class} on website: {site}"
-            print(message)
-            # notify_telegram(message)
-            continue
+        new_apartments = [tag for tag in found_tags if tag not in previous_stored_tags]
+        num_new_apartments = len(new_apartments)  # Number of new apartments for this site
 
-        previous_stored_tag = read_stored_tag(filename)
+        if new_apartments:
+            total_new_apartments += num_new_apartments  # Increment the total count
 
-        if previous_stored_tag and previous_stored_tag != latest_tag:
-            print(f'New listing found on {site} at {url}!')
-            handle_new_tag_found(url, latest_tag)
+        write_stored_tags(filename, found_tags)
 
-        write_stored_tag(filename, latest_tag)
+        # Send a notification if any new apartments are found
+        if total_new_apartments > 0 and previous_stored_tags:
+            handle_new_tag_found(url, total_new_apartments)
 
 
 if __name__ == "__main__":
