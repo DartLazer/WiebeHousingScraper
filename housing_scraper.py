@@ -178,10 +178,10 @@ def fetch_website_using_selenium(url: str) -> BeautifulSoup | None:
 def main():
     ensure_temp_folder_exists()
     print('Checking all websites for new entries...')
-    total_new_apartments = 0  # Keep track of the total number of new apartments
 
     # Loop through config file site sections
     for site in config.sections():
+        total_new_apartments = 0  # Keep track of the total number of new apartments
         section = config[site]
         url = section.get('url')
         html_tag = section.get('html_tag')
