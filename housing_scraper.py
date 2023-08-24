@@ -1,4 +1,5 @@
 import configparser
+import datetime
 import os
 from time import sleep, time
 
@@ -220,5 +221,5 @@ if __name__ == "__main__":
         end_time = time()
         elapsed_time = end_time - start_time
         sleep_time = max(sleep_interval_timer - elapsed_time, 0)  # Ensuring the sleep time is never negative
-        print(f'Script finished, sleeping for {sleep_time} seconds')
+        print(f'Script finished, sleeping for {sleep_time} seconds. Finished at{datetime.datetime.now()}')
         sleep(sleep_time)
