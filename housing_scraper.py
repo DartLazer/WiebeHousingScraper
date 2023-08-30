@@ -1,4 +1,5 @@
 import configparser
+import datetime
 import os
 from time import sleep, time
 
@@ -178,10 +179,10 @@ def fetch_website_using_selenium(url: str) -> BeautifulSoup | None:
 def main():
     ensure_temp_folder_exists()
     print('Checking all websites for new entries...')
-    total_new_apartments = 0  # Keep track of the total number of new apartments
 
     # Loop through config file site sections
     for site in config.sections():
+        total_new_apartments = 0  # Keep track of the total number of new apartments
         section = config[site]
         url = section.get('url')
         html_tag = section.get('html_tag')
@@ -220,5 +221,5 @@ if __name__ == "__main__":
         end_time = time()
         elapsed_time = end_time - start_time
         sleep_time = max(sleep_interval_timer - elapsed_time, 0)  # Ensuring the sleep time is never negative
-        print(f'Script finished, sleeping for {sleep_time} seconds')
+        print(f'Script finished, sleeping for {sleep_time} seconds. Finished at{datetime.datetime.now()}')
         sleep(sleep_time)
