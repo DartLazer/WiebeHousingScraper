@@ -54,6 +54,20 @@ def read_stored_tags(filename: str) -> list:
     return []
 
 
+def check_if_first_run(filename: str) -> bool:
+    """
+    Returns True if a filename for this website does not exist yet, which indicates that its the first run.
+    in this case notifications will not be send later on,
+    :param filename: Filepath to tags file
+    :return: True if no file is found else false
+    """
+    filename = os.path.join('temp_files', filename)
+    if os.path.exists(filename):
+        return False
+    else:
+        return True
+
+
 def write_stored_tags(filename: str, tags: list) -> None:
     """
         Writes a new tag value from a website to a local text file.
@@ -182,6 +196,7 @@ def main():
             soup_page = fetch_website(url)
 
         found_tags = find_all_tags_in_page(soup_page, html_tag, html_class)
+        first_run_for_website = check_if_first_run(filename)
         previous_stored_tags = read_stored_tags(filename)
 
         new_apartments = [tag for tag in found_tags if tag not in previous_stored_tags]
@@ -193,7 +208,7 @@ def main():
         write_stored_tags(filename, found_tags)
 
         # Send a notification if any new apartments are found
-        if total_new_apartments > 0:
+        if total_new_apartments > 0 and not first_run_for_website:
             handle_new_tag_found(url, total_new_apartments)
 
 
