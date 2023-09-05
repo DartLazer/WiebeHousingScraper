@@ -106,7 +106,7 @@ def find_all_tags_in_page(soup_page: BeautifulSoup, target_html_tag: str, target
     tags = soup_page.find_all(target_html_tag, class_=target_html_class)
 
     # Return the desired values (modify as needed)
-    return [tag.text.strip() for tag in tags if tag]
+    return [''.join(tag.text.split()) for tag in tags if tag]
 
 
 def fetch_website(url: str) -> BeautifulSoup | None:
