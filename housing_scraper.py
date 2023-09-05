@@ -193,7 +193,7 @@ def main():
         write_stored_tags(filename, found_tags)
 
         # Send a notification if any new apartments are found
-        if total_new_apartments > 0 and previous_stored_tags:
+        if total_new_apartments > 0:
             handle_new_tag_found(url, total_new_apartments)
 
 
