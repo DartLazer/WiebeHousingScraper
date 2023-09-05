@@ -95,20 +95,6 @@ def notify_telegram(message: str) -> bool:
     return response.status_code == 200
 
 
-def find_newest_tag_in_page(soup_page: BeautifulSoup, target_html_tag: str, target_html_class: str):
-    """
-    Scans a beautiful soup object for a target html tag and target html class
-    :param soup_page: The page that was just visited and converted to a bs4 object
-    :param target_html_tag: html tag to look for
-    :param target_html_class: html class to look for
-    :return: The stripped string of the found html tag, or else None
-    """
-    tag = soup_page.find(target_html_tag, class_=target_html_class)
-
-    # Return the desired value (modify as needed)
-    return tag.text.strip() if tag else None
-
-
 def find_all_tags_in_page(soup_page: BeautifulSoup, target_html_tag: str, target_html_class: str) -> list:
     """
     Scans a beautiful soup object for a target html tag and target html class
